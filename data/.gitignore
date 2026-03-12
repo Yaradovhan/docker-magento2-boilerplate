@@ -1,0 +1,7 @@
+db/
+logs/
+opensearch/
+redis/
+rabbitmq/
+share/
+!.gitignore

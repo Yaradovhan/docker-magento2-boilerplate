@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+#
+# Shortcut for running commands inside the app container.
+#
+# Usage:
+#   bin/m2 cache:flush              → docker compose exec app bin/magento cache:flush
+#   bin/m2 composer require ...     → docker compose exec app composer require ...
+#   bin/m2 bash                     → docker compose exec app bash
+#   bin/m2 node -v                  → docker compose exec app node -v
+#   bin/m2 npm install              → docker compose exec app npm install
+#
+
+set -euo pipefail
+
+COMPOSE_FILE="$(cd "$(dirname "$0")/.." && pwd)/docker-compose.yml"
+DOCKER_COMPOSE="docker compose -f ${COMPOSE_FILE}"
+SERVICE="app"
+
+if [ $# -eq 0 ]; then
+    echo "Usage: bin/m2 <command> [arguments]"
+    echo ""
+    echo "Commands:"
+    echo "  <magento-command>       Run bin/magento <command> in the container"
+    echo "  composer <args>         Run composer inside the container"
+    echo "  bash                    Open a bash shell in the container"
+    echo "  node <args>             Run node inside the container"
+    echo "  npm <args>              Run npm inside the container"
+    echo ""
+    echo "Examples:"
+    echo "  bin/m2 cache:flush"
+    echo "  bin/m2 setup:upgrade"
+    echo "  bin/m2 composer require vendor/package"
+    echo "  bin/m2 bash"
+    exit 0
+fi
+
+CMD="$1"
+shift
+
+case "${CMD}" in
+    composer|bash|node|npm|php)
+        ${DOCKER_COMPOSE} exec ${SERVICE} ${CMD} "$@"
+        ;;
+    *)
+        ${DOCKER_COMPOSE} exec ${SERVICE} bin/magento ${CMD} "$@"
+        ;;
+esac
