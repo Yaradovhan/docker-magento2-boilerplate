@@ -68,6 +68,19 @@ services:
     networks:
       - m2_network
 
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.19.1
+    container_name: m2_opensearch_dashboards
+    ports:
+      - "${OPENSEARCH_DASHBOARDS_PORT:-5601}:5601"
+    environment:
+      - OPENSEARCH_HOSTS=["http://opensearch:9200"]
+      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+    depends_on:
+      - opensearch
+    networks:
+      - m2_network
+
   redis:
     image: redis:7.4-alpine
     container_name: m2_redis
