@@ -2,7 +2,10 @@ name: magento2
 
 services:
   app:
-    build: images/application
+    build:
+      context: images/application
+      args:
+        PHP_VERSION: ${PHP_VERSION:-8.2}
     container_name: m2_app
     depends_on:
       - mariadb
@@ -45,6 +48,7 @@ services:
     volumes:
       - ./data/db/data:/var/lib/mysql
       - ./data/logs:/var/log/mysql
+      - ./images/mariadb/my.cnf:/etc/mysql/conf.d/custom.cnf
     environment:
       MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:-root}
       MARIADB_DATABASE: ${MARIADB_DATABASE:-magento}
@@ -62,24 +66,24 @@ services:
     environment:
       - discovery.type=single-node
       - DISABLE_SECURITY_PLUGIN=true
-      - OPENSEARCH_JAVA_OPTS=${OPENSEARCH_JAVA_OPTS:--Xms512m -Xmx512m}
+      - OPENSEARCH_JAVA_OPTS=${OPENSEARCH_JAVA_OPTS:--Xms2g -Xmx2g}
     volumes:
       - ./data/opensearch:/usr/share/opensearch/data
     networks:
       - m2_network
 
-  opensearch-dashboards:
-    image: opensearchproject/opensearch-dashboards:2.19.1
-    container_name: m2_opensearch_dashboards
-    ports:
-      - "${OPENSEARCH_DASHBOARDS_PORT:-5601}:5601"
-    environment:
-      - OPENSEARCH_HOSTS=["http://opensearch:9200"]
-      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
-    depends_on:
-      - opensearch
-    networks:
-      - m2_network
+#  opensearch-dashboards:
+#    image: opensearchproject/opensearch-dashboards:2.19.1
+#    container_name: m2_opensearch_dashboards
+#    ports:
+#      - "${OPENSEARCH_DASHBOARDS_PORT:-5601}:5601"
+#    environment:
+#      - OPENSEARCH_HOSTS=["http://opensearch:9200"]
+#      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+#    depends_on:
+#      - opensearch
+#    networks:
+#      - m2_network
 
   redis:
     image: redis:7.4-alpine
