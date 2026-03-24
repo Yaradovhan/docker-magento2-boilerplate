@@ -38,6 +38,18 @@ RUN apt-get update && apt-get install -y \
 # Xdebug
 RUN pecl install xdebug && docker-php-ext-enable xdebug
 
+# SPX Profiler
+RUN apt-get update && apt-get install -y zlib1g-dev \
+    && cd /tmp \
+    && git clone https://github.com/NoiseByNorthwest/php-spx.git \
+    && cd php-spx \
+    && phpize \
+    && ./configure \
+    && make \
+    && make install \
+    && docker-php-ext-enable spx \
+    && rm -rf /tmp/php-spx
+
 # Node.js (LTS)
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs
