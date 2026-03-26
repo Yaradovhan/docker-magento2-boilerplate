@@ -18,6 +18,7 @@ services:
       - ./images/application/usr/local/etc/php/conf.d/php.ini:/usr/local/etc/php/conf.d/php.ini
       - ./images/application/usr/local/etc/php/conf.d/opcache.ini:/usr/local/etc/php/conf.d/opcache.ini
       - ./images/application/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+      - ./images/application/usr/local/etc/php/conf.d/docker-php-ext-spx.ini:/usr/local/etc/php/conf.d/docker-php-ext-spx.ini
       - ./data/share:/usr/share/data
     working_dir: /var/www/html
     networks:
@@ -67,23 +68,27 @@ services:
       - discovery.type=single-node
       - DISABLE_SECURITY_PLUGIN=true
       - OPENSEARCH_JAVA_OPTS=${OPENSEARCH_JAVA_OPTS:--Xms2g -Xmx2g}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
     volumes:
       - ./data/opensearch:/usr/share/opensearch/data
     networks:
       - m2_network
 
-#  opensearch-dashboards:
-#    image: opensearchproject/opensearch-dashboards:2.19.1
-#    container_name: m2_opensearch_dashboards
-#    ports:
-#      - "${OPENSEARCH_DASHBOARDS_PORT:-5601}:5601"
-#    environment:
-#      - OPENSEARCH_HOSTS=["http://opensearch:9200"]
-#      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
-#    depends_on:
-#      - opensearch
-#    networks:
-#      - m2_network
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.19.1
+    container_name: m2_opensearch_dashboards
+    ports:
+      - "${OPENSEARCH_DASHBOARDS_PORT:-5601}:5601"
+    environment:
+      - OPENSEARCH_HOSTS=["http://opensearch:9200"]
+      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+    depends_on:
+      - opensearch
+    networks:
+      - m2_network
 
   redis:
     image: redis:7.4-alpine
@@ -115,6 +120,20 @@ services:
     ports:
       - "${MAILPIT_UI_PORT:-8025}:8025"
       - "${MAILPIT_SMTP_PORT:-1025}:1025"
+    networks:
+      - m2_network
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: m2_phpmyadmin
+    ports:
+      - "${PHPMYADMIN_PORT:-8080}:80"
+    environment:
+      PMA_HOST: mariadb
+      PMA_USER: ${MARIADB_USER:-magento}
+      PMA_PASSWORD: ${MARIADB_PASSWORD:-magento}
+    depends_on:
+      - mariadb
     networks:
       - m2_network
 
