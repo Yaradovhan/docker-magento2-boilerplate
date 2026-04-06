@@ -2,29 +2,28 @@
 
 Local Magento 2 development environment with PHP 8.2, MariaDB 10.6, OpenSearch 2.19, Redis 7.4, RabbitMQ 3.13, Nginx, Node 22, Xdebug, SPX, Mailpit, and phpMyAdmin.
 
-The environment is designed around `docker compose`, `make`, and the `bin/m2` helper for daily development tasks.
+The main workflow is based on `make`, with `docker compose` and `bin/m2` available for lower-level commands.
 
 ---
 
 ## Stack
 
-| Service               | Image / Version                                  | Port(s)         | Container                  |
-|-----------------------|--------------------------------------------------|-----------------|----------------------------|
-| PHP-FPM               | `php:8.2-fpm`                                    | 9000 (internal) | `m2_app`                   |
-| Nginx                 | `nginx:latest`                                   | 80              | `m2_nginx`                 |
-| MariaDB               | `mariadb:10.6`                                   | 3306            | `m2_mariadb`               |
-| OpenSearch            | `opensearchproject/opensearch:2.19.1`            | 9200, 9600      | `m2_opensearch`            |
-| OpenSearch Dashboards | `opensearchproject/opensearch-dashboards:2.19.1` | 5601            | `m2_opensearch_dashboards` |
-| Redis                 | `redis:7.4-alpine`                               | 6379            | `m2_redis`                 |
-| RabbitMQ              | `rabbitmq:3.13-management-alpine`                | 5672 / 15672    | `m2_rabbitmq`              |
-| Mailpit               | `axllent/mailpit:latest`                         | 8025 / 1025     | `m2_mail`                  |
-| phpMyAdmin            | `phpmyadmin:latest`                              | 8080            | `m2_phpmyadmin`            |
-| Xdebug                | latest                                           | 9003            | —                          |
-| SPX Profiler          | latest (compiled from source)                    | —               | —                          |
-| Node.js               | 22 LTS                                           | —               | —                          |
-| Composer              | latest                                           | —               | —                          |
-
-> All ports are configurable via `.env`.
+| Service               | Version / Image                                  | URL / Port                  |
+|-----------------------|--------------------------------------------------|-----------------------------|
+| Magento               | Community Edition                                | https://docker.m2.loc       |
+| PHP-FPM               | `php:8.2-fpm`                                    | 9000 internal               |
+| Nginx                 | `nginx:latest`                                   | 80 / 443                    |
+| MariaDB               | `mariadb:10.6`                                   | 3306                        |
+| OpenSearch            | `opensearchproject/opensearch:2.19.1`            | 9200 / 9600                 |
+| OpenSearch Dashboards | `opensearchproject/opensearch-dashboards:2.19.1` | http://localhost:5601       |
+| Redis                 | `redis:7.4-alpine`                               | 6379                        |
+| RabbitMQ              | `rabbitmq:3.13-management-alpine`                | http://localhost:15672      |
+| Mailpit               | `axllent/mailpit:latest`                         | http://localhost:8025       |
+| phpMyAdmin            | `phpmyadmin:latest`                              | http://localhost:8080       |
+| Node.js               | 22 LTS                                           | inside app container        |
+| Composer              | latest                                           | inside app container        |
+| Xdebug                | latest                                           | 9003                        |
+| SPX                   | latest                                           | Magento URL query params    |
 
 ---
 
@@ -32,374 +31,326 @@ The environment is designed around `docker compose`, `make`, and the `bin/m2` he
 
 - Docker
 - Docker Compose
-- Free ports: `80`, `1025`, `3306`, `5601`, `5672`, `6379`, `8025`, `8080`, `9200`, `15672`
+- Homebrew
+- mkcert
+- Free ports: `80`, `443`, `1025`, `3306`, `5601`, `5672`, `6379`, `8025`, `8080`, `9200`, `15672`
+
+If `80` or `443` are already used by another local stack, update `NGINX_PORT` and `NGINX_SSL_PORT` in `.env`.
 
 ---
 
 ## Quick Start
 
 1. Clone the repository and create `.env`:
-   ```
-   git clone <repo-url> .
-   cp .env.example .env
-   ```
+
+```bash
+git clone <repo-url> .
+cp .env.example .env
+```
 
 2. Add the local domain to `/etc/hosts`:
-   ```
-   echo "127.0.0.1 docker.m2.loc" | sudo tee -a /etc/hosts
-   ```
 
-3. Build and start the containers:
-   ```
-   make setup
-   ```
-
-4. Create Magento 2 inside the `application` directory:
-   ```
-   make create-project
-   ```
-
-5. Install Magento:
-   ```
-   make install
-   ```
-
-6. Apply post-install dev setup:
-   ```
-   make post-install
-   ```
-
-7. Open the project in your browser:
-   ```
-   http://docker.m2.loc
-   ```
-
----
-
-## Daily Usage
-
-### Start environment
-```
-make up
+```bash
+echo "127.0.0.1 docker.m2.loc" | sudo tee -a /etc/hosts
 ```
 
-### Stop environment
-```
-make stop
+3. Install mkcert:
+
+```bash
+brew install mkcert
 ```
 
-### Restart environment
-```
-make restart
-```
+4. Start the environment and generate local SSL certificates:
 
-### Show container status
-```
-make ps
-```
-
-### Open shell in app container
-```
-make shell
-```
-
-### Show all logs
-```
-make logs
-```
-
-### Show app logs only
-```
-make logs-app
-```
-
----
-
-## Magento Commands
-
-### Run Magento CLI
-```
-make m2 ARGS='cache:flush'
-make m2 ARGS='indexer:reindex'
-make m2 ARGS='setup:upgrade'
-```
-
-### Run Composer
-```
-make composer ARGS='install'
-make composer ARGS='require vendor/package'
-```
-
-### Run Node / npm
-```
-make node ARGS='-v'
-make npm ARGS='run build'
-```
-
-### Common Magento targets
-```
-make cache
-make reindex
-make compile
-make static
-make upgrade
-make deploy-mode-dev
-make permissions
-make rebuild
-```
-
----
-
-## Makefile Commands
-
-### Main
-```
+```bash
 make setup
-make create-project
-make install
-make post-install
-make reinstall
-make reset
 ```
 
-### Containers
+5. Create Magento 2 inside the `application` directory:
+
+```bash
+make create-project
 ```
-make build
+
+6. Install Magento:
+
+```bash
+make install
+```
+
+7. Apply post-install setup:
+
+```bash
+make post-install
+```
+
+8. Open Magento:
+
+```text
+https://docker.m2.loc
+```
+
+---
+
+## Local HTTPS
+
+The project uses local HTTPS through `mkcert`.
+
+Certificates are expected here:
+
+```text
+images/application/nginx/certs/docker.m2.loc.pem
+images/application/nginx/certs/docker.m2.loc-key.pem
+```
+
+The easiest way to generate local certificates is:
+
+```bash
+make ssl
+```
+
+Manual certificate generation:
+
+```bash
+brew install mkcert
+mkcert -install
+
+mkdir -p images/application/nginx/certs
+
+mkcert \
+-cert-file images/application/nginx/certs/docker.m2.loc.pem \
+-key-file images/application/nginx/certs/docker.m2.loc-key.pem \
+docker.m2.loc localhost 127.0.0.1 ::1
+```
+
+The `certs` directory is kept in git with `.gitkeep`, but generated certificates are ignored and should not be committed.
+
+If port `443` is busy, use another local HTTPS port in `.env`:
+
+```env
+NGINX_SSL_PORT=8443
+```
+
+Then use:
+
+```text
+https://docker.m2.loc:8443
+```
+
+After changing HTTPS settings, update Magento secure URLs:
+
+```bash
+make ssl-config
+```
+
+Manual secure URL configuration:
+
+```bash
+docker compose exec app php bin/magento config:set web/secure/base_url https://docker.m2.loc/
+docker compose exec app php bin/magento config:set web/secure/use_in_frontend 1
+docker compose exec app php bin/magento config:set web/secure/use_in_adminhtml 1
+docker compose exec app php bin/magento cache:flush
+```
+
+For custom HTTPS ports, include the port in `web/secure/base_url`, for example:
+
+```bash
+docker compose exec app php bin/magento config:set web/secure/base_url https://docker.m2.loc:8443/
+```
+
+---
+
+## Main Commands
+
+### Environment
+
+```bash
+make setup
 make up
-make start
 make stop
 make restart
 make down
-make clean
-make pull
 make ps
 make status
 make logs
 make logs-app
 make logs-nginx
 make logs-db
-make shell
-make root-shell
 ```
 
 ### Magento
-```
-make m2 ARGS='cache:flush'
-make composer ARGS='install'
-make composer-i
+
+```bash
+make create-project
+make install
+make post-install
+make upgrade
 make cache
 make reindex
 make compile
 make static
-make upgrade
 make deploy-mode-dev
-make sample-data
+make rebuild
 ```
 
-### Diagnostics / maintenance
+### Shell and tools
+
+```bash
+make shell
+make root-shell
+make composer ARGS='install'
+make composer ARGS='require vendor/package'
+make npm ARGS='run build'
+make node ARGS='-v'
+make m2 ARGS='cache:flush'
 ```
-make validate
-make config
+
+### Maintenance
+
+```bash
 make permissions
 make clear-static
-make rebuild
+make validate
+make config
 make reset
-```
-
----
-
-## Magento Installation Parameters
-
-`make install` runs `bin/magento setup:install` with the following defaults:
-
-```
---base-url=http://docker.m2.loc
---backend-frontname=admin
---db-host=mariadb
---db-name=magento
---db-user=magento
---db-password=magento
---admin-firstname=Admin
---admin-lastname=Admin
---admin-email=admin@example.com
---admin-user=admin
---admin-password=admin123
---language=en_US
---currency=USD
---timezone=Europe/Kyiv
---use-rewrites=1
---search-engine=opensearch
---opensearch-host=opensearch
---opensearch-port=9200
---session-save=redis
---session-save-redis-host=redis
---session-save-redis-port=6379
---session-save-redis-db=2
---cache-backend=redis
---cache-backend-redis-server=redis
---cache-backend-redis-port=6379
---cache-backend-redis-db=0
---page-cache=redis
---page-cache-redis-server=redis
---page-cache-redis-port=6379
---page-cache-redis-db=1
---amqp-host=rabbitmq
---amqp-port=5672
---amqp-user=magento
---amqp-password=magento
-```
-
-After installation, `make post-install` performs:
-
-```
-bin/magento module:disable Magento_AdminAdobeImsTwoFactorAuth Magento_TwoFactorAuth
-bin/magento setup:upgrade
-bin/magento deploy:mode:set developer
-bin/magento cache:flush
 ```
 
 ---
 
 ## Web Interfaces
 
-| Service               | URL                        | Credentials           |
-|-----------------------|----------------------------|-----------------------|
-| Magento Storefront    | http://docker.m2.loc       | —                     |
-| Magento Admin         | http://docker.m2.loc/admin | `admin` / `admin123`  |
-| phpMyAdmin            | http://localhost:8080      | auto-login via env    |
-| OpenSearch Dashboards | http://localhost:5601      | —                     |
-| RabbitMQ Management   | http://localhost:15672     | `magento` / `magento` |
-| Mailpit               | http://localhost:8025      | —                     |
+| Service               | URL                         | Credentials           |
+|-----------------------|-----------------------------|-----------------------|
+| Magento Storefront    | https://docker.m2.loc       | —                     |
+| Magento Admin         | https://docker.m2.loc/admin | `admin` / `admin123`  |
+| phpMyAdmin            | http://localhost:8080       | auto-login via env    |
+| OpenSearch Dashboards | http://localhost:5601       | —                     |
+| RabbitMQ Management   | http://localhost:15672      | `magento` / `magento` |
+| Mailpit               | http://localhost:8025       | —                     |
+
+---
+
+## Local Mail
+
+Mailpit is used for local email testing.
+
+Mailpit UI:
+
+```text
+http://localhost:8025
+```
+
+SMTP inside Docker:
+
+```text
+host: mail
+port: 1025
+```
+
+The PHP app container sends mail through `msmtp` to Mailpit.
+
+If using Mageplaza SMTP locally, configure it as:
+
+```text
+Host: mail
+Port: 1025
+Protocol: None
+Authentication: None
+Username:
+Password:
+```
 
 ---
 
 ## Environment Variables
 
-All configuration is stored in `.env`:
+The main settings are stored in `.env`.
 
-| Variable                      | Default             | Description                |
-|------------------------------|---------------------|----------------------------|
-| `APP_TIMEZONE`               | `Europe/Kyiv`       | PHP timezone               |
-| `PHP_VERSION`                | `8.2`               | PHP version for app        |
-| `NGINX_PORT`                 | `80`                | Nginx HTTP port            |
-| `MARIADB_PORT`               | `3306`              | MariaDB port               |
-| `MARIADB_ROOT_PASSWORD`      | `root`              | MariaDB root password      |
-| `MARIADB_DATABASE`           | `magento`           | Database name              |
-| `MARIADB_USER`               | `magento`           | Database user              |
-| `MARIADB_PASSWORD`           | `magento`           | Database password          |
-| `OPENSEARCH_PORT`            | `9200`              | OpenSearch HTTP port       |
-| `OPENSEARCH_JAVA_OPTS`       | `-Xms512m -Xmx512m` | OpenSearch JVM memory      |
-| `OPENSEARCH_DASHBOARDS_PORT` | `5601`              | Dashboards port            |
-| `REDIS_PORT`                 | `6379`              | Redis port                 |
-| `RABBITMQ_PORT`              | `5672`              | RabbitMQ AMQP port         |
-| `RABBITMQ_MANAGEMENT_PORT`   | `15672`             | RabbitMQ management port   |
-| `RABBITMQ_DEFAULT_USER`      | `magento`           | RabbitMQ user              |
-| `RABBITMQ_DEFAULT_PASS`      | `magento`           | RabbitMQ password          |
-| `MAILPIT_UI_PORT`            | `8025`              | Mailpit web UI port        |
-| `MAILPIT_SMTP_PORT`          | `1025`              | Mailpit SMTP port          |
-| `PHPMYADMIN_PORT`            | `8080`              | phpMyAdmin port            |
+| Variable                      | Default             | Description              |
+|------------------------------|---------------------|--------------------------|
+| `APP_TIMEZONE`               | `Europe/Kyiv`       | PHP timezone             |
+| `PHP_VERSION`                | `8.2`               | PHP version              |
+| `NGINX_PORT`                 | `80`                | Nginx HTTP port          |
+| `NGINX_SSL_PORT`             | `443`               | Nginx HTTPS port         |
+| `MARIADB_PORT`               | `3306`              | MariaDB port             |
+| `MARIADB_ROOT_PASSWORD`      | `root`              | MariaDB root password    |
+| `MARIADB_DATABASE`           | `magento`           | Database name            |
+| `MARIADB_USER`               | `magento`           | Database user            |
+| `MARIADB_PASSWORD`           | `magento`           | Database password        |
+| `OPENSEARCH_PORT`            | `9200`              | OpenSearch HTTP port     |
+| `OPENSEARCH_JAVA_OPTS`       | `-Xms512m -Xmx512m` | OpenSearch memory        |
+| `OPENSEARCH_DASHBOARDS_PORT` | `5601`              | Dashboards port          |
+| `REDIS_PORT`                 | `6379`              | Redis port               |
+| `RABBITMQ_PORT`              | `5672`              | RabbitMQ AMQP port       |
+| `RABBITMQ_MANAGEMENT_PORT`   | `15672`             | RabbitMQ management port |
+| `RABBITMQ_DEFAULT_USER`      | `magento`           | RabbitMQ user            |
+| `RABBITMQ_DEFAULT_PASS`      | `magento`           | RabbitMQ password        |
+| `MAILPIT_UI_PORT`            | `8025`              | Mailpit UI port          |
+| `MAILPIT_SMTP_PORT`          | `1025`              | Mailpit SMTP port        |
+| `PHPMYADMIN_PORT`            | `8080`              | phpMyAdmin port          |
 
 ---
 
-## CLI Shortcut: `bin/m2`
+## bin/m2 Shortcut
 
-`bin/m2` is a wrapper for running commands inside the `app` container:
+`bin/m2` is a helper for running commands inside the app container.
 
-```
-bin/m2 <magento-command>        # runs bin/magento <command>
-bin/m2 composer <args>          # runs composer <args>
-bin/m2 bash                     # opens shell in container
-bin/m2 node <args>              # runs node inside container
-bin/m2 npm <args>               # runs npm inside container
-```
-
-### Examples
-```
-bin/m2 indexer:reindex
-bin/m2 cache:flush
-bin/m2 setup:di:compile
-bin/m2 setup:static-content:deploy -f
-bin/m2 queue:consumers:start
-bin/m2 composer require vendor/package
+```bash
+bin/m2 <magento-command>
+bin/m2 composer <args>
 bin/m2 bash
+bin/m2 node <args>
+bin/m2 npm <args>
+```
+
+Examples:
+
+```bash
+bin/m2 cache:flush
+bin/m2 indexer:reindex
+bin/m2 setup:upgrade
+bin/m2 composer require vendor/package
 ```
 
 ---
 
-## Xdebug
+## Debugging Tools
 
-Xdebug is pre-configured and starts automatically with every request.
+### Xdebug
 
-| Setting           | Value                  |
-|-------------------|------------------------|
-| Mode              | `debug,develop`        |
-| Port              | `9003`                 |
-| IDE Key           | `PHPSTORM`             |
-| Client Host       | `host.docker.internal` |
-| Max Nesting Level | `512`                  |
+Xdebug is enabled with:
 
-**PHPStorm setup:**  
-Go to `Settings → PHP → Servers`, add server `docker.m2.loc`, and map project root `/var/www/html` to local `application`.
+| Setting     | Value                  |
+|-------------|------------------------|
+| Mode        | `debug,develop`        |
+| Port        | `9003`                 |
+| IDE Key     | `PHPSTORM`             |
+| Client Host | `host.docker.internal` |
 
----
+PHPStorm server:
+- name: `docker.m2.loc`
+- container path: `/var/www/html`
+- local path: `application`
 
-## SPX Profiler
+### SPX
 
-[SPX](https://github.com/NoiseByNorthworst/php-spx) is installed and enabled for performance profiling.
+SPX is available through URL query params:
 
-Enable profiling by adding these query params to any URL:
-
+```text
+https://docker.m2.loc/?SPX_KEY=dev&SPX_UI_URI=/
 ```
+
+To profile a request:
+
+```text
 ?SPX_KEY=dev&SPX_ENABLED=1
 ```
 
-SPX UI:
-
-```
-http://docker.m2.loc/?SPX_KEY=dev&SPX_UI_URI=/
-```
-
 ---
 
-## PHP Configuration
+## Data and Reset
 
-| Setting                         | Value     |
-|---------------------------------|-----------|
-| `memory_limit`                  | `-1`      |
-| `max_execution_time`            | `300`     |
-| `max_input_vars`                | `2786`    |
-| `upload_max_filesize`           | `240M`    |
-| `post_max_size`                 | `240M`    |
-| `opcache.memory_consumption`    | `256M`    |
-| `opcache.max_accelerated_files` | `40000`   |
-| `opcache.validate_timestamps`   | `1`       |
-| `opcache.revalidate_freq`       | `0`       |
-| `realpath_cache_size`           | `16384K`  |
-| `realpath_cache_ttl`            | `1800`    |
-
----
-
-## MariaDB Tuning
-
-Custom settings are stored in `images/mariadb/my.cnf`:
-
-| Setting                          | Value   |
-|----------------------------------|---------|
-| `innodb_buffer_pool_size`        | `4G`    |
-| `tmp_table_size`                 | `256M`  |
-| `max_heap_table_size`            | `256M`  |
-| `sort_buffer_size`               | `8M`    |
-| `join_buffer_size`               | `8M`    |
-| `max_allowed_packet`             | `256M`  |
-| `innodb_log_file_size`           | `256M`  |
-| `innodb_flush_log_at_trx_commit` | `2`     |
-| `innodb_flush_method`            | `O_DIRECT` |
-
----
-
-## Data Volumes
-
-Persistent data is stored in the `data/` directory:
+Persistent data is stored in `data/`.
 
 | Path              | Service      |
 |-------------------|--------------|
@@ -410,37 +361,22 @@ Persistent data is stored in the `data/` directory:
 | `data/rabbitmq`   | RabbitMQ     |
 | `data/share`      | Shared data  |
 
----
+Full environment reset:
 
-## Reset and Recovery
-
-### Full environment reset
-```
+```bash
 make reset
 ```
 
-This target:
-- stops and removes containers, volumes, and orphans
-- removes project data from `data/`
-- clears Magento generated/cache/static artifacts
-- removes `application/app/etc/env.php`
-- removes `application/app/etc/config.php`
-- restarts Docker daemon automatically on Ubuntu if needed
+This removes project containers, project volumes, local service data, Magento generated files, cache/static artifacts, and `application/app/etc/env.php`.
 
-### Reinstall Magento only
-```
-make reinstall
-```
-
-### Rebuild static/dev artifacts
-```
-make rebuild
-```
+Use carefully.
 
 ---
 
 ## Notes
 
-- `make` is the preferred entry point for routine project management.
-- `bin/m2` is useful for day-to-day Magento commands inside the container.
-- `docker compose` can still be used directly for advanced or custom workflows.
+- Use `make` for routine project management.
+- Use `bin/m2` for quick Magento commands inside the app container.
+- Local SSL certificates are generated per machine and must not be committed.
+- If HTTPS redirects behave unexpectedly, clear browser site data for `docker.m2.loc` or test in an incognito window.
+- Advanced PHP and MariaDB tuning lives in `images/application/usr/local/etc/php/conf.d/` and `images/mariadb/my.cnf`.

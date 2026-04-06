@@ -1,3 +1,6 @@
 /.env
 /application/
 /data/
+
+/images/application/nginx/certs/*
+!/images/application/nginx/certs/.gitkeep

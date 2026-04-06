@@ -16,8 +16,11 @@ COMPOSE ?= docker compose
 APP_SERVICE ?= app
 DOMAIN ?= docker.m2.loc
 APP_PATH ?= application
+NGINX_SSL_PORT ?= 443
+BASE_URL ?= http://$(DOMAIN)/
+SECURE_BASE_URL ?= https://$(DOMAIN)$(if $(filter-out 443,$(NGINX_SSL_PORT)),:$(NGINX_SSL_PORT),)/
 
-MAGENTO_INSTALL_FLAGS ?= --base-url=http://$(DOMAIN) \
+MAGENTO_INSTALL_FLAGS ?= --base-url=$(BASE_URL) \
 	--backend-frontname=admin \
 	--db-host=mariadb \
 	--db-name=magento \
@@ -54,7 +57,7 @@ MAGENTO_INSTALL_FLAGS ?= --base-url=http://$(DOMAIN) \
 
 .DEFAULT_GOAL := help
 
-.PHONY: help setup init hosts build up start stop restart down clean reset destroy pull \
+.PHONY: help setup init hosts ssl ssl-config build up start stop restart down clean reset pull \
 	ps status logs logs-app logs-nginx logs-db shell root-shell composer composer-i npm node m2 \
 	create-project install post-install reinstall compile static cache upgrade reindex \
 	deploy-mode-dev permissions clear-static rebuild validate config sample-data bash
@@ -69,9 +72,13 @@ help:
 	@echo "  make setup           - bootstrap project after clone"
 	@echo "  make create-project  - create Magento project in application/"
 	@echo "  make install         - run Magento setup:install"
-	@echo "  make post-install    - disable 2FA + developer mode + cache flush"
+	@echo "  make post-install    - disable 2FA + developer mode + HTTPS config + cache flush"
 	@echo "  make reinstall       - reinstall Magento from scratch"
 	@echo "  make reset           - full Docker/project reset with project image cleanup"
+	@echo ""
+	@echo "SSL:"
+	@echo "  make ssl             - generate local mkcert certificates"
+	@echo "  make ssl-config      - configure Magento secure URLs"
 	@echo ""
 	@echo "Containers:"
 	@echo "  make build           - build images"
@@ -110,6 +117,8 @@ help:
 	@echo "  make config          - show rendered docker compose config"
 	@echo ""
 	@echo "Detected OS: $(OS) $(LINUX_DISTRO)"
+	@echo "HTTP URL:    $(BASE_URL)"
+	@echo "HTTPS URL:   $(SECURE_BASE_URL)"
 
 # -----------------------------
 # Bootstrap
@@ -124,7 +133,7 @@ init:
 		echo "No .env.example found, skipping"; \
 	fi
 
-setup: init up
+setup: init ssl up
 	@echo ""
 	@echo "Next steps:"
 	@echo "  1. make hosts"
@@ -135,6 +144,26 @@ setup: init up
 hosts:
 	@echo "Add this line to /etc/hosts:"
 	@echo "127.0.0.1 $(DOMAIN)"
+
+ssl:
+	@mkdir -p images/application/nginx/certs
+	@if ! command -v mkcert >/dev/null 2>&1; then \
+		echo "mkcert is not installed."; \
+		echo "Install it first: brew install mkcert"; \
+		exit 1; \
+	fi
+	mkcert -install
+	mkcert \
+		-cert-file images/application/nginx/certs/$(DOMAIN).pem \
+		-key-file images/application/nginx/certs/$(DOMAIN)-key.pem \
+		$(DOMAIN) localhost 127.0.0.1 ::1
+
+ssl-config:
+	$(MAKE) m2 ARGS='config:set web/unsecure/base_url $(BASE_URL)'
+	$(MAKE) m2 ARGS='config:set web/secure/base_url $(SECURE_BASE_URL)'
+	$(MAKE) m2 ARGS='config:set web/secure/use_in_frontend 1'
+	$(MAKE) m2 ARGS='config:set web/secure/use_in_adminhtml 1'
+	$(MAKE) cache
 
 # -----------------------------
 # Docker lifecycle
@@ -169,8 +198,9 @@ ps:
 status:
 	@$(COMPOSE) ps
 	@echo ""
-	@echo "Storefront: http://$(DOMAIN)"
-	@echo "Admin:      http://$(DOMAIN)/admin"
+	@echo "Storefront HTTP:  $(BASE_URL)"
+	@echo "Storefront HTTPS: $(SECURE_BASE_URL)"
+	@echo "Admin HTTPS:      $(SECURE_BASE_URL)admin"
 
 logs:
 	$(COMPOSE) logs -f --tail=150
@@ -223,7 +253,7 @@ post-install:
 	$(MAKE) m2 ARGS='module:disable Magento_AdminAdobeImsTwoFactorAuth Magento_TwoFactorAuth'
 	$(MAKE) upgrade
 	$(MAKE) deploy-mode-dev
-	$(MAKE) cache
+	$(MAKE) ssl-config
 	$(MAKE) permissions
 
 reinstall:
