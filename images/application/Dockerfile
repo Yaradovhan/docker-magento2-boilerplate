@@ -1,6 +1,9 @@
 ARG PHP_VERSION=8.2
 FROM php:${PHP_VERSION}-fpm
 
+# -----------------------------
+# System packages + PHP extensions
+# -----------------------------
 RUN apt-get update && apt-get install -y \
     libicu-dev \
     libpng-dev \
@@ -16,6 +19,8 @@ RUN apt-get update && apt-get install -y \
     gnupg \
     ca-certificates \
     git \
+    msmtp \
+    msmtp-mta \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
         bcmath \
@@ -33,12 +38,18 @@ RUN apt-get update && apt-get install -y \
         xsl \
         zip \
         ftp \
-        opcache
+        opcache \
+    && rm -rf /var/lib/apt/lists/*
 
+# -----------------------------
 # Xdebug
-RUN pecl install xdebug && docker-php-ext-enable xdebug
+# -----------------------------
+RUN pecl install xdebug \
+    && docker-php-ext-enable xdebug
 
-# SPX Profiler
+# -----------------------------
+# SPX profiler
+# -----------------------------
 RUN apt-get update && apt-get install -y zlib1g-dev \
     && cd /tmp \
     && git clone https://github.com/NoiseByNorthwest/php-spx.git \
@@ -48,15 +59,30 @@ RUN apt-get update && apt-get install -y zlib1g-dev \
     && make \
     && make install \
     && docker-php-ext-enable spx \
-    && rm -rf /tmp/php-spx
+    && rm -rf /tmp/php-spx \
+    && rm -rf /var/lib/apt/lists/*
 
-# Node.js (LTS)
+# -----------------------------
+# Node.js
+# -----------------------------
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y nodejs
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
 
+# -----------------------------
 # Composer
+# -----------------------------
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+# -----------------------------
+# Mailpit / SMTP via msmtp
+# -----------------------------
+COPY msmtprc /etc/msmtprc
+RUN chmod 644 /etc/msmtprc
+
+# -----------------------------
+# Working directory
+# -----------------------------
 WORKDIR /var/www/html
 
 CMD ["php-fpm"]
