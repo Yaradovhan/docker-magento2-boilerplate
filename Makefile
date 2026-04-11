@@ -57,7 +57,7 @@ MAGENTO_INSTALL_FLAGS ?= --base-url=$(BASE_URL) \
 
 .DEFAULT_GOAL := help
 
-.PHONY: help setup init hosts ssl ssl-config build up start stop restart down clean reset pull \
+.PHONY: help setup init hosts ssl ssl-config smtp-config build up start stop restart down clean reset pull \
 	ps status logs logs-app logs-nginx logs-db shell root-shell composer composer-i npm node m2 \
 	create-project install post-install reinstall compile static cache upgrade reindex \
 	deploy-mode-dev permissions clear-static rebuild validate config sample-data bash
@@ -79,6 +79,7 @@ help:
 	@echo "SSL:"
 	@echo "  make ssl             - generate local mkcert certificates"
 	@echo "  make ssl-config      - configure Magento secure URLs"
+	@echo "  make smtp-config     - configure Mageplaza SMTP for local Mailpit"
 	@echo ""
 	@echo "Containers:"
 	@echo "  make build           - build images"
@@ -163,6 +164,17 @@ ssl-config:
 	$(MAKE) m2 ARGS='config:set web/secure/base_url $(SECURE_BASE_URL)'
 	$(MAKE) m2 ARGS='config:set web/secure/use_in_frontend 1'
 	$(MAKE) m2 ARGS='config:set web/secure/use_in_adminhtml 1'
+	$(MAKE) cache
+
+smtp-config:
+	$(MAKE) m2 ARGS='config:set smtp/general/enabled 1'
+	$(MAKE) m2 ARGS='config:set smtp/configuration_option/host mail'
+	$(MAKE) m2 ARGS='config:set smtp/configuration_option/port 1025'
+	$(MAKE) m2 ARGS='config:set smtp/configuration_option/protocol ""'
+	$(MAKE) m2 ARGS='config:set smtp/configuration_option/authentication smtp'
+	$(MAKE) m2 ARGS='config:set smtp/configuration_option/username ""'
+	$(MAKE) m2 ARGS='config:set smtp/configuration_option/password ""'
+	$(MAKE) m2 ARGS='config:set smtp/configuration_option/return_path_email ""'
 	$(MAKE) cache
 
 # -----------------------------
@@ -254,6 +266,7 @@ post-install:
 	$(MAKE) upgrade
 	$(MAKE) deploy-mode-dev
 	$(MAKE) ssl-config
+	$(MAKE) smtp-config
 	$(MAKE) permissions
 
 reinstall:

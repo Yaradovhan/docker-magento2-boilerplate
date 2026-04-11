@@ -78,7 +78,7 @@ make create-project
 make install
 ```
 
-7. Apply post-install setup:
+7. Apply post-install setup, including local SMTP configuration for Mailpit:
 
 ```bash
 make post-install
@@ -141,6 +141,7 @@ After changing HTTPS settings, update Magento secure URLs:
 
 ```bash
 make ssl-config
+make smtp-config
 ```
 
 Manual secure URL configuration:
@@ -176,6 +177,7 @@ make logs
 make logs-app
 make logs-nginx
 make logs-db
+make smtp-config
 ```
 
 ### Magento
@@ -249,7 +251,13 @@ port: 1025
 
 The PHP app container sends mail through `msmtp` to Mailpit.
 
-If using Mageplaza SMTP locally, configure it as:
+If using Mageplaza SMTP locally, apply boilerplate defaults with:
+
+```bash
+make smtp-config
+```
+
+This sets:
 
 ```text
 Host: mail
