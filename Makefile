@@ -57,7 +57,7 @@ MAGENTO_INSTALL_FLAGS ?= --base-url=$(BASE_URL) \
 
 .DEFAULT_GOAL := help
 
-.PHONY: help setup init hosts ssl ssl-config smtp-config build up start stop restart down clean reset pull \
+.PHONY: help setup init hosts ssl ssl-config smtp-config turnstile-config build up start stop restart down clean reset pull \
 	ps status logs logs-app logs-nginx logs-db shell root-shell composer composer-i npm node m2 \
 	create-project install post-install reinstall compile static cache upgrade reindex \
 	deploy-mode-dev permissions clear-static rebuild validate config sample-data bash
@@ -80,6 +80,7 @@ help:
 	@echo "  make ssl             - generate local mkcert certificates"
 	@echo "  make ssl-config      - configure Magento secure URLs"
 	@echo "  make smtp-config     - configure Mageplaza SMTP for local Mailpit"
+	@echo "  make turnstile-config - disable storefront Turnstile for local development"
 	@echo ""
 	@echo "Containers:"
 	@echo "  make build           - build images"
@@ -177,6 +178,10 @@ smtp-config:
 	$(MAKE) m2 ARGS='config:set smtp/configuration_option/return_path_email ""'
 	$(MAKE) cache
 
+turnstile-config:
+	$(MAKE) m2 ARGS='config:set pixel_open_cloudflare_turnstile/frontend/enabled 0'
+	$(MAKE) cache
+
 # -----------------------------
 # Docker lifecycle
 # -----------------------------
@@ -267,6 +272,7 @@ post-install:
 	$(MAKE) deploy-mode-dev
 	$(MAKE) ssl-config
 	$(MAKE) smtp-config
+	$(MAKE) turnstile-config
 	$(MAKE) permissions
 
 reinstall:
