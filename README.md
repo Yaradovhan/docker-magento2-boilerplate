@@ -6,10 +6,8 @@ Minimal local Magento 2 setup driven through `make`.
 
 Copy `.env.example` to `.env` and set only what is needed:
 
-- `CUSTOM_DOMAIN`  
-  Optional. If set, it overrides `DOMAIN`.
 - `DOMAIN`  
-  Fallback local domain if `CUSTOM_DOMAIN` is empty.
+  Local project domain
 - `APP_PATH`  
   Directory mounted into the app container. Default: `application`
 - `GITHUB_REPO`  
@@ -48,7 +46,7 @@ cp .env.example .env
 Recommended:
 
 ```env
-CUSTOM_DOMAIN=my-project.loc
+DOMAIN=my-project.loc
 GITHUB_REPO=https://github.com/your-org/your-magento-repo.git
 ```
 
@@ -86,7 +84,7 @@ cp .env.example .env
 2. Set your domain in `.env`:
 
 ```env
-CUSTOM_DOMAIN=my-project.loc
+DOMAIN=my-project.loc
 ```
 
 3. Add the domain to `/etc/hosts`:

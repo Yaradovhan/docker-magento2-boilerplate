@@ -5,7 +5,7 @@ SHELL := /bin/bash
 # -----------------------------
 -include .env
 
-DOMAIN := $(or $(CUSTOM_DOMAIN),$(DOMAIN),docker.m2.loc)
+DOMAIN ?= docker.m2.loc
 APP_PATH ?= application
 COMPOSE ?= docker compose
 APP_SERVICE ?= app
@@ -74,7 +74,7 @@ init:
 		echo "No .env.example found, skipping"; \
 	fi
 
-setup: init ssl up clone-repo composer-install
+setup: init clone-repo ssl up composer-install
 	@echo "Next steps:"
 	@echo "  make hosts"
 
@@ -118,9 +118,12 @@ clone-repo:
 	@if [ -d "$(APP_PATH)/.git" ]; then \
 		echo "Repository already cloned in $(APP_PATH)."; \
 	elif [ -d "$(APP_PATH)" ] && [ -z "$$(find "$(APP_PATH)" -mindepth 1 ! -name '.DS_Store' -print -quit)" ]; then \
-		echo "Directory $(APP_PATH) exists but is empty. Recreating it for clone..."; \
-		rm -rf "$(APP_PATH)"; \
-		git clone $(GITHUB_REPO) $(APP_PATH); \
+		echo "Directory $(APP_PATH) exists but is empty. Cloning into it..."; \
+		rm -f "$(APP_PATH)/.DS_Store"; \
+		tmp_dir="$$(mktemp -d)"; \
+		git clone $(GITHUB_REPO) "$$tmp_dir/repo"; \
+		cp -R "$$tmp_dir/repo/." "$(APP_PATH)/"; \
+		rm -rf "$$tmp_dir"; \
 	elif [ ! -d "$(APP_PATH)" ]; then \
 		git clone $(GITHUB_REPO) $(APP_PATH); \
 	else \
@@ -130,13 +133,13 @@ clone-repo:
 	fi
 
 composer-install:
-	$(COMPOSE) exec $(APP_SERVICE) sh -c 'cd /var/www/html && if [ -f "composer.json" ]; then composer install; else echo "composer.json not found in /var/www/html"; exit 1; fi'
+	$(COMPOSE) exec -w / $(APP_SERVICE) sh -c 'cd /var/www/html && if [ -f "composer.json" ]; then composer install; else echo "composer.json not found in /var/www/html"; exit 1; fi'
 
 create-project:
 	@if [ -f "$(APP_PATH)/composer.json" ]; then \
 		echo "composer.json already exists in $(APP_PATH), skipping create-project."; \
 	else \
-		$(COMPOSE) exec $(APP_SERVICE) composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition /var/www/html; \
+		$(COMPOSE) exec -w / $(APP_SERVICE) composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition /var/www/html; \
 	fi
 
 install:
