@@ -31,26 +31,20 @@ brew install mkcert
 
 ## Setup flow
 
-### Option 1. Existing Magento repository
-
-Use this when `GITHUB_REPO` points to a Magento project repository.
-
 1. Create local config:
 
 ```bash
 cp .env.example .env
 ```
 
-2. Set the project domain and repository in `.env`.
-
-Recommended:
+2. Update `.env` with your project values.
 
 ```env
 DOMAIN=my-project.loc
 GITHUB_REPO=https://github.com/your-org/your-magento-repo.git
 ```
 
-3. Add the domain to `/etc/hosts`:
+3. Add the domain from `.env` to `/etc/hosts`:
 
 ```bash
 echo "127.0.0.1 my-project.loc" | sudo tee -a /etc/hosts
@@ -58,66 +52,37 @@ echo "127.0.0.1 my-project.loc" | sudo tee -a /etc/hosts
 
 Replace `my-project.loc` with your actual domain from `.env`.
 
-4. Start everything and clone/install dependencies:
-
-```bash
-make setup
-```
-
-5. Install Magento:
-
-```bash
-make install
-make post-install
-```
-
-Or run the full flow in one command:
+4. Run the full setup:
 
 ```bash
 make full-setup
 ```
 
-### Option 2. Fresh Magento project
+### Alternative: run step by step
 
-Use this when you want Magento created from scratch instead of cloning a project repository.
+Use this if you do not want the full flow in one command.
 
-1. Create local config:
+#### Existing Magento repository
 
-```bash
-cp .env.example .env
-```
-
-2. Set your domain in `.env`:
-
-```env
-DOMAIN=my-project.loc
-```
-
-3. Add the domain to `/etc/hosts`:
+Use this when `GITHUB_REPO` points to a Magento project repository.
 
 ```bash
-echo "127.0.0.1 my-project.loc" | sudo tee -a /etc/hosts
-```
-
-4. Start Docker and generate local SSL:
-
-```bash
-make init
-make ssl
-make up
-```
-
-5. Create Magento and install it:
-
-```bash
-make create-project
+make setup
+make hosts
 make install
 make post-install
 ```
 
-Or after `make create-project`, complete the rest manually with:
+#### Fresh Magento project
+
+Use this when you want Magento created from scratch instead of cloning a project repository.
 
 ```bash
+make init
+make hosts
+make ssl
+make up
+make create-project
 make install
 make post-install
 ```
@@ -157,6 +122,7 @@ make reset
 - `make create-project` is for a fresh Magento installation.
 - If `application` already exists but is empty, `make clone-repo` now recreates it correctly.
 - `composer-install` runs inside the mounted Magento root (`/var/www/html`).
+- PhpStorm may auto-detect `application` as a nested Git root because it contains its own `.git`. If that happens, go to `Settings -> Version Control` and remove the VCS mapping for `application`.
 
 ## Stack
 
