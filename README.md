@@ -71,6 +71,12 @@ make install
 make post-install
 ```
 
+Or run the full flow in one command:
+
+```bash
+make full-setup
+```
+
 ### Option 2. Fresh Magento project
 
 Use this when you want Magento created from scratch instead of cloning a project repository.
@@ -109,10 +115,18 @@ make install
 make post-install
 ```
 
+Or after `make create-project`, complete the rest manually with:
+
+```bash
+make install
+make post-install
+```
+
 ## Main commands
 
 ```bash
 make setup
+make full-setup
 make clone-repo
 make composer-install
 make create-project

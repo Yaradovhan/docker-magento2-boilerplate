@@ -34,7 +34,7 @@ GITHUB_REPO ?= https://github.com/Yaradovhan/falcon.git
 
 .DEFAULT_GOAL := help
 
-.PHONY: help setup init hosts ssl ssl-config build up start stop restart down clean reset pull ps status logs logs-app logs-nginx logs-db shell root-shell composer composer-i npm node m2 create-project install post-install reinstall compile static cache upgrade reindex deploy-mode-dev permissions clear-static rebuild validate config sample-data bash
+.PHONY: help setup full-setup init hosts ssl ssl-config build up start stop restart down clean reset pull ps status logs logs-app logs-nginx logs-db shell root-shell composer composer-i npm node m2 create-project install post-install reinstall compile static cache upgrade reindex deploy-mode-dev permissions clear-static rebuild validate config sample-data bash
 
 # -----------------------------
 # Help
@@ -43,6 +43,7 @@ help:
 	@echo "Magento 2 Docker Environment"
 	@echo "Main Commands:"
 	@echo "  make setup          - Full setup including clone and install"
+	@echo "  make full-setup     - Setup + hosts hint + Magento install + post-install"
 	@echo "  make reset          - Full Docker/project reset"
 	@echo ""
 	@echo "Docker Commands:"
@@ -77,6 +78,11 @@ init:
 setup: init clone-repo ssl up composer-install
 	@echo "Next steps:"
 	@echo "  make hosts"
+
+full-setup: setup
+	$(MAKE) hosts
+	$(MAKE) install
+	$(MAKE) post-install
 
 hosts:
 	@echo "Add this line to /etc/hosts:"
