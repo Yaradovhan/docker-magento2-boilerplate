@@ -54,6 +54,7 @@ help:
 	@echo "  make logs           - View all service logs"
 	@echo ""
 	@echo "Magento Commands:"
+	@echo "  make upgrade        - Run setup:upgrade"
 	@echo "  make compile        - Setup:di:compile"
 	@echo "  make static         - Deploy static content"
 	@echo "  make cache          - Flush cache"
@@ -167,6 +168,9 @@ reinstall:
 # -----------------------------
 # Magento commands
 # -----------------------------
+upgrade:
+	$(MAKE) m2 ARGS='setup:upgrade'
+
 compile:
 	$(MAKE) m2 ARGS='setup:di:compile'
 
