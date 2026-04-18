@@ -219,3 +219,9 @@ reset:
 	rm -rf $(APP_PATH)/var/cache $(APP_PATH)/var/page_cache $(APP_PATH)/var/di $(APP_PATH)/var/view_preprocessed $(APP_PATH)/generated $(APP_PATH)/pub/static/*
 	rm -f $(APP_PATH)/app/etc/env.php $(APP_PATH)/app/etc/config.php
 	@echo "Project reset completed"
+
+# -----------------------------
+# Command wrappers
+# -----------------------------
+m2:
+	$(COMPOSE) exec $(APP_SERVICE) php bin/magento $(ARGS)
