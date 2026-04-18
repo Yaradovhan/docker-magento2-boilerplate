@@ -8,6 +8,8 @@ Copy `.env.example` to `.env` and set only what is needed:
 
 - `DOMAIN`  
   Local project domain
+- `COMPOSE_PROJECT_NAME`  
+  Docker Compose project name used to namespace containers, volumes, and networks
 - `APP_PATH`  
   Directory mounted into the app container. Default: `application`
 - `GITHUB_REPO`  
@@ -40,6 +42,7 @@ cp .env.example .env
 2. Update `.env` with your project values.
 
 ```env
+COMPOSE_PROJECT_NAME=myproject
 DOMAIN=my-project.loc
 GITHUB_REPO=https://github.com/your-org/your-magento-repo.git
 ```
