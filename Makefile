@@ -5,7 +5,7 @@ SHELL := /bin/bash
 # -----------------------------
 -include .env
 
-DOMAIN ?= docker.m2.loc
+DOMAIN ?= myproject.m2.loc
 APP_PATH ?= application
 COMPOSE ?= docker compose
 APP_SERVICE ?= app
@@ -30,7 +30,7 @@ MAGENTO_INSTALL_FLAGS ?= --base-url=$(BASE_URL) \
 	--timezone=$(APP_TIMEZONE) \
 	--use-rewrites=1
 
-GITHUB_REPO ?= https://github.com/Yaradovhan/falcon.git
+GITHUB_REPO ?=
 
 .DEFAULT_GOAL := help
 
