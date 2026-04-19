@@ -8,6 +8,8 @@ Copy `.env.example` to `.env` and set only what is needed:
 
 - `DOMAIN`  
   Local project domain
+- `COMPOSE_PROJECT_NAME`  
+  Docker Compose project name used to namespace containers, volumes, and networks
 - `APP_PATH`  
   Directory mounted into the app container. Default: `application`
 - `GITHUB_REPO`  
@@ -40,6 +42,7 @@ cp .env.example .env
 2. Update `.env` with your project values.
 
 ```env
+COMPOSE_PROJECT_NAME=myproject
 DOMAIN=my-project.loc
 GITHUB_REPO=https://github.com/your-org/your-magento-repo.git
 ```
@@ -97,6 +100,7 @@ make composer-install
 make create-project
 make install
 make post-install
+make upgrade
 make cache
 make reindex
 make compile
@@ -120,6 +124,7 @@ make reset
 
 - `make setup` is for repository-based projects.
 - `make create-project` is for a fresh Magento installation.
+- `make upgrade` runs `bin/magento setup:upgrade` inside the app container.
 - If `application` already exists but is empty, `make clone-repo` now recreates it correctly.
 - `composer-install` runs inside the mounted Magento root (`/var/www/html`).
 - PhpStorm may auto-detect `application` as a nested Git root because it contains its own `.git`. If that happens, go to `Settings -> Version Control` and remove the VCS mapping for `application`.
