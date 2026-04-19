@@ -171,9 +171,6 @@ reinstall:
 # -----------------------------
 # Magento commands
 # -----------------------------
-m2:
-	$(COMPOSE) exec $(APP_SERVICE) php bin/magento $(ARGS)
-
 upgrade:
 	$(MAKE) m2 ARGS='setup:upgrade'
 
