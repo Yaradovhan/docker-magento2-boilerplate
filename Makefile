@@ -6,6 +6,7 @@ SHELL := /bin/bash
 -include .env
 
 DOMAIN ?= docker.m2.loc
+COMPOSE_PROJECT_NAME ?= m2
 APP_PATH ?= application
 COMPOSE ?= docker compose
 APP_SERVICE ?= app
@@ -53,12 +54,14 @@ help:
 	@echo "  make logs           - View all service logs"
 	@echo ""
 	@echo "Magento Commands:"
+	@echo "  make upgrade        - Run setup:upgrade"
 	@echo "  make compile        - Setup:di:compile"
 	@echo "  make static         - Deploy static content"
 	@echo "  make cache          - Flush cache"
 	@echo "  make reindex        - Reindex"
 	@echo ""
 	@echo "Detected OS: $(OS)"
+	@echo "Compose project: $(COMPOSE_PROJECT_NAME)"
 	@echo "HTTP URL: $(BASE_URL)"
 	@echo "HTTPS URL: $(SECURE_BASE_URL)"
 
@@ -165,6 +168,9 @@ reinstall:
 # -----------------------------
 # Magento commands
 # -----------------------------
+upgrade:
+	$(MAKE) m2 ARGS='setup:upgrade'
+
 compile:
 	$(MAKE) m2 ARGS='setup:di:compile'
 
@@ -207,9 +213,15 @@ config:
 reset:
 	@echo "Full Docker/project reset..."
 	$(COMPOSE) down -v --remove-orphans --rmi local
-	docker container prune -f --filter "label=com.docker.compose.project=magento2"
-	docker volume prune -f --filter "label=com.docker.compose.project=magento2"
+	docker container prune -f --filter "label=com.docker.compose.project=$(COMPOSE_PROJECT_NAME)"
+	docker volume prune -f --filter "label=com.docker.compose.project=$(COMPOSE_PROJECT_NAME)"
 	rm -rf data/db/data data/logs data/opensearch data/redis data/rabbitmq
 	rm -rf $(APP_PATH)/var/cache $(APP_PATH)/var/page_cache $(APP_PATH)/var/di $(APP_PATH)/var/view_preprocessed $(APP_PATH)/generated $(APP_PATH)/pub/static/*
 	rm -f $(APP_PATH)/app/etc/env.php $(APP_PATH)/app/etc/config.php
 	@echo "Project reset completed"
+
+# -----------------------------
+# Command wrappers
+# -----------------------------
+m2:
+	$(COMPOSE) exec $(APP_SERVICE) php bin/magento $(ARGS)
