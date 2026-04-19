@@ -52,6 +52,7 @@ help:
 	@echo "  make up             - Start Docker containers"
 	@echo "  make down           - Stop Docker containers"
 	@echo "  make logs           - View all service logs"
+	@echo "  make db-import      - Run database import"
 	@echo ""
 	@echo "Magento Commands:"
 	@echo "  make upgrade        - Run setup:upgrade"
