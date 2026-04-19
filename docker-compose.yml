@@ -44,6 +44,8 @@ services:
       - app
     networks:
       - project_network
+    environment:
+      - DOMAIN=${DOMAIN}
 
   mariadb:
     image: mariadb:10.6

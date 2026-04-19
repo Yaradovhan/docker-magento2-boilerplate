@@ -34,7 +34,7 @@ GITHUB_REPO ?=
 
 .DEFAULT_GOAL := help
 
-.PHONY: help setup full-setup init hosts ssl ssl-config build up start stop restart down clean reset pull ps status logs logs-app logs-nginx logs-db shell root-shell composer composer-i npm node m2 create-project install post-install reinstall compile static cache upgrade reindex deploy-mode-dev permissions clear-static rebuild validate config sample-data bash
+.PHONY: help setup full-setup init hosts ssl ssl-config build up start stop restart down clean reset pull ps status logs logs-app logs-nginx logs-db shell root-shell composer composer-i npm node m2 create-project install post-install reinstall compile static cache upgrade reindex deploy-mode-dev permissions clear-static rebuild validate config sample-data bash db-import
 
 # -----------------------------
 # Help
@@ -85,8 +85,8 @@ full-setup: setup
 	$(MAKE) post-install
 
 hosts:
-	@echo "Add this line to /etc/hosts:"
-	@echo "127.0.0.1 $(DOMAIN)"
+	@echo "Run this command to add the domain to /etc/hosts:"
+	@echo "  echo '127.0.0.1 $(DOMAIN)' | sudo tee -a /etc/hosts"
 
 ssl:
 	@mkdir -p images/application/nginx/certs
@@ -121,14 +121,17 @@ logs:
 # Magento setup
 # -----------------------------
 clone-repo:
-	@if [ -d "$(APP_PATH)/.git" ]; then \
+	@if [ -z "$(GITHUB_REPO)" ]; then \
+		echo "GITHUB_REPO is not set, skipping clone."; \
+		mkdir -p "$(APP_PATH)"; \
+	elif [ -d "$(APP_PATH)/.git" ]; then \
 		echo "Repository already cloned in $(APP_PATH)."; \
 	elif [ -d "$(APP_PATH)" ] && [ -z "$$(find "$(APP_PATH)" -mindepth 1 ! -name '.DS_Store' -print -quit)" ]; then \
 		echo "Directory $(APP_PATH) exists but is empty. Cloning into it..."; \
 		rm -f "$(APP_PATH)/.DS_Store"; \
 		tmp_dir="$$(mktemp -d)"; \
-		git clone $(GITHUB_REPO) "$$tmp_dir/repo"; \
-		cp -R "$$tmp_dir/repo/." "$(APP_PATH)/"; \
+		git clone $(GITHUB_REPO) "$$tmp_dir/repo" && \
+		cp -R "$$tmp_dir/repo/." "$(APP_PATH)/" && \
 		rm -rf "$$tmp_dir"; \
 	elif [ ! -d "$(APP_PATH)" ]; then \
 		git clone $(GITHUB_REPO) $(APP_PATH); \
@@ -165,6 +168,12 @@ reinstall:
 # -----------------------------
 # Magento commands
 # -----------------------------
+m2:
+	$(COMPOSE) exec $(APP_SERVICE) php bin/magento $(ARGS)
+
+upgrade:
+	$(MAKE) m2 ARGS='setup:upgrade'
+
 compile:
 	$(MAKE) m2 ARGS='setup:di:compile'
 
@@ -197,6 +206,17 @@ rebuild:
 	$(MAKE) static
 	$(MAKE) cache
 	$(MAKE) permissions
+
+db-import:
+	@read -p "Database name: " db; \
+	read -p "Path to .sql.gz file: " file; \
+	if [ ! -f "$$file" ]; then \
+		echo "File not found: $$file"; \
+		exit 1; \
+	fi; \
+	echo "Importing $$file into $$db..."; \
+	gunzip -c "$$file" | $(COMPOSE) exec -T mariadb mysql -u$(MARIADB_USER) -p$(MARIADB_PASSWORD) "$$db"; \
+	echo "Done."
 
 validate:
 	$(COMPOSE) config --quiet
