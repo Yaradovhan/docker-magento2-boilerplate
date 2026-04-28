@@ -77,12 +77,16 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # -----------------------------
 # Mailpit / SMTP via msmtp
 # -----------------------------
-COPY msmtprc /etc/msmtprc
-RUN chmod 644 /etc/msmtprc
+COPY msmtprc.template /etc/msmtprc.template
+RUN chmod 644 /etc/msmtprc.template
+
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
 # -----------------------------
 # Working directory
 # -----------------------------
 WORKDIR /var/www/html
 
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["php-fpm"]
