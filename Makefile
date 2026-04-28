@@ -32,10 +32,21 @@ MAGENTO_INSTALL_FLAGS ?= --base-url=$(BASE_URL) \
 	--use-rewrites=1
 
 GITHUB_REPO ?=
+MAGENTO_ARGS ?=
+
+ifneq ($(filter magento,$(firstword $(MAKECMDGOALS))),)
+MAGENTO_ARGS_FROM_GOALS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+ifneq ($(strip $(MAGENTO_ARGS_FROM_GOALS)),)
+MAGENTO_ARGS := $(MAGENTO_ARGS_FROM_GOALS)
+endif
+
+%:
+	@:
+endif
 
 .DEFAULT_GOAL := help
 
-.PHONY: help setup full-setup init hosts ssl ssl-config build up start stop restart down clean reset pull ps status logs logs-app logs-nginx logs-db shell root-shell composer composer-install composer-update composer-i npm node m2 create-project install post-install reinstall compile static cache upgrade reindex deploy-mode-dev permissions clear-static rebuild validate config sample-data bash db-import
+.PHONY: help setup full-setup init hosts ssl ssl-config build up start stop restart down clean reset pull ps status logs logs-app logs-nginx logs-db shell root-shell composer composer-install composer-update composer-i npm node m2 magento create-project install post-install reinstall compile static cache upgrade reindex deploy-mode-dev permissions clear-static rebuild validate config sample-data bash db-import
 
 # -----------------------------
 # Help
@@ -59,6 +70,8 @@ help:
 	@echo "  make composer-update  - Run composer update inside app container"
 	@echo ""
 	@echo "Magento Commands:"
+	@echo "  make magento MAGENTO_ARGS='cache:flush'  - Run any bin/magento command"
+	@echo "  make magento cache:flush               - Short form for any bin/magento command"
 	@echo "  make upgrade        - Run setup:upgrade"
 	@echo "  make compile        - Setup:di:compile"
 	@echo "  make static         - Deploy static content"
@@ -253,3 +266,12 @@ reset:
 # -----------------------------
 m2:
 	$(COMPOSE) exec $(APP_SERVICE) php bin/magento $(ARGS)
+
+magento:
+	@if [ -z "$(MAGENTO_ARGS)" ]; then \
+		echo "MAGENTO_ARGS is required. Examples:"; \
+		echo "  make magento MAGENTO_ARGS='cache:flush'"; \
+		echo "  make magento cache:flush"; \
+		exit 1; \
+	fi
+	$(COMPOSE) exec $(APP_SERVICE) php bin/magento $(MAGENTO_ARGS)
