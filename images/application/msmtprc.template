@@ -6,5 +6,5 @@ logfile /tmp/msmtp.log
 account default
 host mail
 port 1025
-from dev@docker.m2.loc
+from dev@${DOMAIN}
 auto_from off
