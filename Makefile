@@ -33,11 +33,22 @@ MAGENTO_INSTALL_FLAGS ?= --base-url=$(BASE_URL) \
 
 GITHUB_REPO ?=
 MAGENTO_ARGS ?=
+REINDEX_INDEXERS ?=
 
 ifneq ($(filter magento,$(firstword $(MAKECMDGOALS))),)
 MAGENTO_ARGS_FROM_GOALS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
 ifneq ($(strip $(MAGENTO_ARGS_FROM_GOALS)),)
 MAGENTO_ARGS := $(MAGENTO_ARGS_FROM_GOALS)
+endif
+
+%:
+	@:
+endif
+
+ifneq ($(filter reindex,$(firstword $(MAKECMDGOALS))),)
+REINDEX_INDEXERS_FROM_GOALS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+ifneq ($(strip $(REINDEX_INDEXERS_FROM_GOALS)),)
+REINDEX_INDEXERS := $(REINDEX_INDEXERS_FROM_GOALS)
 endif
 
 %:
@@ -77,7 +88,9 @@ help:
 	@echo "  make compile        - Setup:di:compile"
 	@echo "  make static         - Deploy static content"
 	@echo "  make cache          - Flush cache"
-	@echo "  make reindex        - Reindex"
+	@echo "  make reindex        - Reindex all indexers"
+	@echo "  make reindex catalogsearch_fulltext - Reindex a specific indexer"
+	@echo "  make reindex REINDEX_INDEXERS='catalogsearch_fulltext customer_grid' - Reindex specific indexers"
 	@echo ""
 	@echo "Detected OS: $(OS)"
 	@echo "Compose project: $(COMPOSE_PROJECT_NAME)"
@@ -215,7 +228,7 @@ cache:
 	$(MAKE) m2 ARGS='cache:flush'
 
 reindex:
-	$(MAKE) m2 ARGS='indexer:reindex'
+	$(MAKE) m2 ARGS='indexer:reindex$(if $(strip $(REINDEX_INDEXERS)), $(REINDEX_INDEXERS),)'
 
 deploy-mode-dev:
 	$(MAKE) m2 ARGS='deploy:mode:set developer'
