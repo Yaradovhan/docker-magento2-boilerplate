@@ -62,6 +62,7 @@ help:
 	@echo "  make build          - Build Docker images"
 	@echo "  make up             - Start Docker containers"
 	@echo "  make down           - Stop Docker containers"
+	@echo "  make shell          - Open shell inside app container"
 	@echo "  make logs           - View all service logs"
 	@echo "  make db-import      - Run database import"
 	@echo ""
@@ -134,6 +135,9 @@ up:
 
 down:
 	$(COMPOSE) down
+
+shell:
+	$(COMPOSE) exec $(APP_SERVICE) bash
 
 logs:
 	$(COMPOSE) logs -f --tail=150
