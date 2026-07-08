@@ -29,7 +29,10 @@ MAGENTO_INSTALL_FLAGS ?= --base-url=$(BASE_URL) \
 	--language=en_US \
 	--currency=USD \
 	--timezone=$(APP_TIMEZONE) \
-	--use-rewrites=1
+	--use-rewrites=1 \
+	--search-engine=opensearch \
+	--opensearch-host=opensearch \
+	--opensearch-port=9200
 
 GITHUB_REPO ?=
 MAGENTO_ARGS ?=
@@ -202,7 +205,7 @@ install:
 	$(MAKE) m2 ARGS='setup:install $(MAGENTO_INSTALL_FLAGS)'
 
 post-install:
-	$(MAKE) m2 ARGS='module:disable Magento_TwoFactorAuth'
+	$(MAKE) m2 ARGS='module:disable Magento_AdminAdobeImsTwoFactorAuth Magento_TwoFactorAuth'
 	$(MAKE) deploy-mode-dev
 	$(MAKE) ssl-config
 	$(MAKE) permissions
