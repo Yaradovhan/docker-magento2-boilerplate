@@ -147,7 +147,7 @@ build:
 	$(COMPOSE) build
 
 up:
-	$(COMPOSE) up -d --build
+	$(COMPOSE) up -d
 
 down:
 	$(COMPOSE) down
